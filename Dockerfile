@@ -10,10 +10,10 @@ RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS api
 WORKDIR /src/api
-COPY api/SecretSanta.Api.csproj ./
-RUN dotnet restore
-COPY api/ ./
-RUN dotnet publish -c Release -o /app --no-restore
+COPY api/SecretSanta.Api/SecretSanta.Api.csproj SecretSanta.Api/
+RUN dotnet restore SecretSanta.Api
+COPY api/SecretSanta.Api/ SecretSanta.Api/
+RUN dotnet publish SecretSanta.Api -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app

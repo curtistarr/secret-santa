@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using SecretSanta.Api;
 using SecretSanta.Api.Data;
-using SecretSanta.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +8,7 @@ if (Environment.GetEnvironmentVariable("PORT") is { Length: > 0 } port)
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Services.AddDbContext<AppDbContext>(o => o.UseNpgsql(ConnectionString.Resolve(builder.Configuration)));
+builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
@@ -21,9 +20,7 @@ app.UseExceptionHandler();
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapGet("/api/health", () => Results.Ok(new { status = "ok" }));
-app.MapAdminEndpoints();
-app.MapInviteEndpoints();
+app.MapControllers();
 
 // Unknown /api routes are real 404s; everything else is handled by the React app's router.
 app.MapFallback("/api/{**rest}", () => Results.NotFound());

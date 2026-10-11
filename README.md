@@ -10,7 +10,8 @@ A small Secret Santa app for family gift exchanges.
 | Folder | What |
 | --- | --- |
 | `web/` | React + TypeScript (Vite) |
-| `api/` | .NET 10 minimal API + EF Core |
+| `api/SecretSanta.Api/` | .NET 10 Web API (controllers) + EF Core |
+| `api/SecretSanta.Api.Tests/` | xUnit unit tests for the API |
 | — | PostgreSQL |
 
 In production the .NET app serves the built React app, so it deploys as a single Railway service plus a Postgres database.
@@ -21,8 +22,8 @@ Prerequisites: .NET 10 SDK, Node 22+, and a local PostgreSQL.
 
 ```bash
 # 1. API (http://localhost:5080). Uses the connection string and admin password
-#    ("admin") in api/appsettings.Development.json; edit those to match your Postgres.
-cd api
+#    ("admin") in api/SecretSanta.Api/appsettings.Development.json; edit those to match your Postgres.
+cd api/SecretSanta.Api
 dotnet run --urls http://localhost:5080
 
 # 2. Frontend (http://localhost:5173), proxies /api to the API
@@ -37,8 +38,17 @@ To add a migration after changing the models:
 
 ```bash
 dotnet tool restore
-cd api && dotnet ef migrations add <Name> -o Data/Migrations
+cd api/SecretSanta.Api && dotnet ef migrations add <Name> -o Data/Migrations
 ```
+
+## Tests
+
+```bash
+cd api
+dotnet test
+```
+
+The tests run on every push and pull request via GitHub Actions (`.github/workflows/api-tests.yml`).
 
 ## Deploying to Railway
 
