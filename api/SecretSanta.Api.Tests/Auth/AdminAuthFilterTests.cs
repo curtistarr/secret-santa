@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using SecretSanta.Api.Auth;
 
-namespace SecretSanta.Api.Tests;
+namespace SecretSanta.Api.Tests.Auth;
 
 public class AdminAuthFilterTests
 {
@@ -26,26 +26,27 @@ public class AdminAuthFilterTests
         return context;
     }
 
-    [Fact]
+    [Test]
     public void CorrectPassword_IsAllowed()
     {
-        Assert.Null(Run("hunter2", "hunter2").Result);
+        Assert.That(Run("hunter2", "hunter2").Result, Is.Null);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("wrong")]
-    [InlineData("HUNTER2")]
+    [TestCase(null)]
+    [TestCase("")]
+    [TestCase("wrong")]
+    [TestCase("HUNTER2")]
     public void MissingOrWrongPassword_IsUnauthorized(string? header)
     {
-        Assert.IsType<UnauthorizedResult>(Run("hunter2", header).Result);
+        Assert.That(Run("hunter2", header).Result, Is.InstanceOf<UnauthorizedResult>());
     }
 
-    [Fact]
+    [Test]
     public void UnconfiguredPassword_ReturnsServiceUnavailable()
     {
-        var result = Assert.IsType<ObjectResult>(Run(null, "anything").Result);
-        Assert.Equal(StatusCodes.Status503ServiceUnavailable, result.StatusCode);
+        var result = Run(null, "anything").Result;
+
+        Assert.That(result, Is.InstanceOf<ObjectResult>());
+        Assert.That(((ObjectResult)result!).StatusCode, Is.EqualTo(StatusCodes.Status503ServiceUnavailable));
     }
 }

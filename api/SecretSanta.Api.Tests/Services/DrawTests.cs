@@ -1,19 +1,18 @@
 using SecretSanta.Api.Data;
+using SecretSanta.Api.Services;
+using SecretSanta.Api.Tests.Support;
 
-namespace SecretSanta.Api.Tests;
+namespace SecretSanta.Api.Tests.Services;
 
 public class DrawTests
 {
     private static List<Participant> MakeParticipants(int count) =>
-        Enumerable.Range(1, count)
-            .Select(i => new Participant { Id = Guid.NewGuid(), Name = $"Person {i}", InviteToken = $"token-{i}" })
-            .ToList();
+        TestData.Participants(Guid.NewGuid(), Enumerable.Range(1, count).Select(i => $"Person {i}").ToArray());
 
-    [Theory]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(5)]
-    [InlineData(20)]
+    [TestCase(2)]
+    [TestCase(3)]
+    [TestCase(5)]
+    [TestCase(20)]
     public void Assign_NobodyDrawsThemselves(int count)
     {
         for (var run = 0; run < 100; run++)
@@ -22,28 +21,22 @@ public class DrawTests
 
             Draw.Assign(participants);
 
-            Assert.All(participants, p =>
-            {
-                Assert.NotNull(p.RecipientId);
-                Assert.NotEqual(p.Id, p.RecipientId);
-            });
+            Assert.That(participants, Has.All.Matches<Participant>(p => p.RecipientId != null && p.RecipientId != p.Id));
         }
     }
 
-    [Theory]
-    [InlineData(2)]
-    [InlineData(7)]
+    [TestCase(2)]
+    [TestCase(7)]
     public void Assign_EveryoneReceivesExactlyOneGift(int count)
     {
         var participants = MakeParticipants(count);
 
         Draw.Assign(participants);
 
-        var recipients = participants.Select(p => p.RecipientId!.Value).OrderBy(id => id);
-        Assert.Equal(participants.Select(p => p.Id).OrderBy(id => id), recipients);
+        Assert.That(participants.Select(p => p.RecipientId!.Value), Is.EquivalentTo(participants.Select(p => p.Id)));
     }
 
-    [Fact]
+    [Test]
     public void Assign_FormsASingleLoop()
     {
         var participants = MakeParticipants(10);
@@ -56,27 +49,23 @@ public class DrawTests
         while (visited.Add(current.Id))
             current = byId[current.RecipientId!.Value];
 
-        Assert.Equal(participants.Count, visited.Count);
+        Assert.That(visited, Has.Count.EqualTo(participants.Count));
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
+    [TestCase(0)]
+    [TestCase(1)]
     public void Assign_WithFewerThanTwoParticipants_Throws(int count)
     {
         Assert.Throws<InvalidOperationException>(() => Draw.Assign(MakeParticipants(count)));
     }
 
-    [Fact]
+    [Test]
     public void NewInviteToken_IsUrlSafeAndUnique()
     {
         var tokens = Enumerable.Range(0, 1000).Select(_ => Draw.NewInviteToken()).ToList();
 
-        Assert.Equal(tokens.Count, tokens.Distinct().Count());
-        Assert.All(tokens, t =>
-        {
-            Assert.Equal(24, t.Length);
-            Assert.Matches("^[A-Za-z0-9_-]+$", t);
-        });
+        Assert.That(tokens, Is.Unique);
+        Assert.That(tokens, Has.All.Length.EqualTo(24));
+        Assert.That(tokens, Has.All.Matches("^[A-Za-z0-9_-]+$"));
     }
 }

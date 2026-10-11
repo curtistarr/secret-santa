@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using SecretSanta.Api.Data;
 
-namespace SecretSanta.Api;
+namespace SecretSanta.Api.Services;
 
 public static class Draw
 {

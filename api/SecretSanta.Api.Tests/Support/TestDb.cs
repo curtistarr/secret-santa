@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SecretSanta.Api.Data;
 
-namespace SecretSanta.Api.Tests;
+namespace SecretSanta.Api.Tests.Support;
 
 public static class TestDb
 {

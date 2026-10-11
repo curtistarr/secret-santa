@@ -1,4 +1,4 @@
-namespace SecretSanta.Api.Controllers;
+namespace SecretSanta.Api.Contracts;
 
 public record ExchangeInput(string Name, DateOnly Date, string? Description);
 public record CreateExchangeRequest(string Name, DateOnly Date, string? Description, List<string>? Participants);

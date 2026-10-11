@@ -10,11 +10,23 @@ A small Secret Santa app for family gift exchanges.
 | Folder | What |
 | --- | --- |
 | `web/` | React + TypeScript (Vite) |
-| `api/SecretSanta.Api/` | .NET 10 Web API (controllers) + EF Core |
-| `api/SecretSanta.Api.Tests/` | xUnit unit tests for the API |
+| `api/SecretSanta.Api/` | .NET 10 Web API + EF Core |
+| `api/SecretSanta.Api.Tests/` | NUnit unit tests for the API |
 | — | PostgreSQL |
 
 In production the .NET app serves the built React app, so it deploys as a single Railway service plus a Postgres database.
+
+### API layers
+
+The API is split into layers, each behind an interface so it can be mocked in tests or swapped out:
+
+| Layer | Folder | Responsibility |
+| --- | --- | --- |
+| Controllers | `Controllers/` | HTTP only: routing, admin auth, and turning service results into responses. |
+| Services | `Services/` | Business logic and orchestration: validation, drawing names, recording invite views. |
+| Stores | `Stores/` | Simple CRUD, one store per table (`IExchangeStore`, `IParticipantStore`). |
+
+Request and response shapes live in `Contracts/`, and EF Core entities and migrations in `Data/`.
 
 ## Running locally
 
@@ -48,7 +60,7 @@ cd api
 dotnet test
 ```
 
-The tests run on every push and pull request via GitHub Actions (`.github/workflows/api-tests.yml`).
+Controllers are tested against mocked services and services against mocked stores (NSubstitute). Stores are tested against the EF Core in-memory provider. The tests run on every push and pull request via GitHub Actions (`.github/workflows/api-tests.yml`).
 
 ## Deploying to Railway
 
