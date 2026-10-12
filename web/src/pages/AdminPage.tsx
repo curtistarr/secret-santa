@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { adminPassword, api, ApiError, formatDate, type ExchangeSummary } from '../api'
 import AdminLogin from './AdminLogin'
@@ -8,22 +8,27 @@ export default function AdminPage() {
   const [exchanges, setExchanges] = useState<ExchangeSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    try {
-      setExchanges(await api.listExchanges())
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        adminPassword.clear()
-        setLoggedIn(false)
-      } else {
-        setError((err as Error).message)
-      }
-    }
-  }, [])
-
   useEffect(() => {
-    if (loggedIn) load()
-  }, [loggedIn, load])
+    if (!loggedIn) return
+    let cancelled = false
+    api
+      .listExchanges()
+      .then((list) => {
+        if (!cancelled) setExchanges(list)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        if (err instanceof ApiError && err.status === 401) {
+          adminPassword.clear()
+          setLoggedIn(false)
+        } else {
+          setError((err as Error).message)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [loggedIn])
 
   if (!loggedIn) return <AdminLogin onLogin={() => setLoggedIn(true)} />
 

@@ -9,7 +9,7 @@ A small Secret Santa app for family gift exchanges.
 
 | Folder | What |
 | --- | --- |
-| `web/` | React + TypeScript (Vite) |
+| `web/` | React + TypeScript (Vite), tested with Vitest + React Testing Library |
 | `api/SecretSanta.Api/` | .NET 10 Web API + EF Core |
 | `api/SecretSanta.Api.Tests/` | NUnit unit tests for the API |
 | — | PostgreSQL |
@@ -53,14 +53,25 @@ dotnet tool restore
 cd api/SecretSanta.Api && dotnet ef migrations add <Name> -o Data/Migrations
 ```
 
-## Tests
+## Tests and linting
 
 ```bash
+# API: NUnit tests
 cd api
 dotnet test
+
+# Frontend: lint, Vitest + React Testing Library tests, type check and build
+cd web
+npm run lint
+npm test
+npm run build
 ```
 
-Controllers are tested against mocked services and services against mocked stores (NSubstitute). Stores are tested against the EF Core in-memory provider. The tests run on every push and pull request via GitHub Actions (`.github/workflows/api-tests.yml`).
+API controllers are tested against mocked services, and services against mocked stores (NSubstitute). Stores are tested against the EF Core in-memory provider.
+
+Frontend tests sit next to the code they test (`*.test.ts(x)`). The API client is tested against a stubbed `fetch`, and each page component against a mocked API client.
+
+All of these run on every push to `main` and on every pull request via GitHub Actions (`.github/workflows/ci.yml`).
 
 ## Deploying to Railway
 

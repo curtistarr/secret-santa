@@ -9,30 +9,46 @@ export default function ExchangePage() {
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
 
-  // Runs an API call, applying the returned exchange and surfacing errors.
-  const run = useCallback(
-    async (action: () => Promise<ExchangeDetail | void>) => {
-      setError(null)
-      try {
-        const result = await action()
-        if (result) setExchange(result)
-        return true
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-          adminPassword.clear()
-          navigate('/admin')
-        } else {
-          setError((err as Error).message)
-        }
-        return false
+  // An expired or wrong password sends the organiser back to log in; anything else is shown on the page.
+  const handleError = useCallback(
+    (err: unknown) => {
+      if (err instanceof ApiError && err.status === 401) {
+        adminPassword.clear()
+        navigate('/admin')
+      } else {
+        setError((err as Error).message)
       }
     },
     [navigate],
   )
 
   useEffect(() => {
-    run(() => api.getExchange(id))
-  }, [id, run])
+    let cancelled = false
+    api
+      .getExchange(id)
+      .then((result) => {
+        if (!cancelled) setExchange(result)
+      })
+      .catch((err) => {
+        if (!cancelled) handleError(err)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [id, handleError])
+
+  // Runs an API call, applying the returned exchange and surfacing errors.
+  async function run(action: () => Promise<ExchangeDetail | void>) {
+    setError(null)
+    try {
+      const result = await action()
+      if (result) setExchange(result)
+      return true
+    } catch (err) {
+      handleError(err)
+      return false
+    }
+  }
 
   if (!exchange) {
     return (
